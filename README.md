@@ -1,6 +1,6 @@
 # KIEMTRA — Kiểm tra trực tuyến tại lớp
 
-**Địa chỉ chạy thật:** `https://diemdanhsv.com/kiemtra/`
+**Địa chỉ chạy thật:** `https://diemdanhsv.com/kiemtra/` → `https://kiemtra.diemdanhsv.com/`
 **Chủ nhiệm:** ThS. Đinh Quốc Tuấn — Khoa Địa chất, Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM
 
 Hệ thống thi trắc nghiệm **trực tiếp trên lớp** bằng điện thoại/laptop của sinh viên:
@@ -26,23 +26,23 @@ KIEMTRA **không có CSDL hay tài khoản riêng**:
 - điểm thang 10 được ghi vào `grade_columns`/`grades` (mặc định cột “Giữa kỳ”) — SV xem ở trang Xem điểm;
 - chỉ thêm 7 bảng tiền tố `kt_` (`db/schema.mysql.sql`), không sửa bảng nào của site chính.
 
-## Triển khai lên Hostinger (thư mục con `/kiemtra`)
+## Triển khai lên Hostinger (subdomain `kiemtra.diemdanhsv.com`)
+
+hPanel kiểu **Deployments** gắn mỗi website với đúng một repo, nên KIEMTRA chạy trên subdomain riêng
+(giống `hopviec.diemdanhsv.com`); `diemdanhsv.com/kiemtra` chuyển hướng sang đó.
 
 1. **Tạo bảng**: hPanel → Databases → phpMyAdmin → chọn CSDL của diemdanhsv → *Import* → `db/schema.mysql.sql`.
-2. **Git deploy**: hPanel → Websites → `diemdanhsv.com` → Advanced → **Git** → *Add repository*
-   - Repository: `https://github.com/Tuan-23880095/KIEMTRA.git` · Branch: `main`
-   - **Install path: `kiemtra`** (thành `public_html/kiemtra`; thư mục phải trống)
-   - Repo riêng tư: chép *SSH key* hPanel hiển thị vào GitHub → repo → Settings → **Deploy keys**.
-   - Bật **Auto deployment** (dán Webhook URL vào GitHub → Settings → Webhooks).
-3. Trong repo **diemdanhsv**, thêm dòng `/kiemtra/` vào `.gitignore` để hai repo không giẫm lên nhau.
-4. Kiểm tra: `https://diemdanhsv.com/kiemtra/api/index.php?action=ping` → `{"status":"success",…}`;
-   mở `https://diemdanhsv.com/kiemtra/gv.html`, đăng nhập bằng tài khoản điểm danh.
-5. (Tuỳ chọn) đặt liên kết “Kiểm tra trực tuyến” trên trang chủ diemdanhsv.com trỏ tới `/kiemtra/`.
+2. **Tạo subdomain**: hPanel → Websites → diemdanhsv.com → Domains → **Subdomains** → tạo `kiemtra` (bật SSL).
+3. **Kết nối repo**: hPanel → Websites → mở website `kiemtra.diemdanhsv.com` → **Deployments** (hoặc Advanced → Git)
+   → *Connect with GitHub* → chọn repo **KIEMTRA**, nhánh `main` → Deploy → bật **Auto-deployment**.
+4. **Chuyển hướng** `diemdanhsv.com/kiemtra` → subdomain: thêm vào `.htaccess` của repo diemdanhsv (đặt ngay sau
+   `RewriteRule ^\.well-known/ - [L]`):
+   `RewriteRule ^kiemtra(/.*)?$ https://kiemtra.diemdanhsv.com$1 [R=302,L,NC]`
+5. **Kiểm tra**: `https://kiemtra.diemdanhsv.com/api/index.php?action=ping` → `{"status":"success",…}`;
+   mở `https://diemdanhsv.com/kiemtra/gv.html` → đăng nhập bằng tài khoản điểm danh.
 
-> Nếu hPanel không cho thêm repo thứ hai cho cùng website: tạo subdomain `kiemtra.diemdanhsv.com`,
-> deploy repo vào đó, và thêm vào `.htaccess` của site chính:
-> `RewriteRule ^kiemtra(/.*)?$ https://kiemtra.diemdanhsv.com$1 [R=302,L]`.
-> Khi đó sửa đường dẫn tìm `private/config.php` hoặc đặt `upload_dir` trong mục `kiemtra` của config.
+Mã tự tìm file bí mật dùng chung `domains/diemdanhsv.com/private/config.php` ở cả hai cách bố trí thư mục của
+subdomain trên Hostinger, nên **không cần** tạo config mới.
 
 Ảnh câu hỏi lưu ở `private/kiemtra-uploads/` (ngoài `public_html`, không bị auto-deploy xoá).
 

@@ -25,13 +25,17 @@ function kt_config_path(): string
             return $path = $env;
         }
     }
-    // __DIR__ = …/public_html/kiemtra/api/lib → dò ngược tối đa 5 cấp tìm private/config.php
+    // Dò ngược từ thư mục chứa mã, hỗ trợ cả hai cách triển khai:
+    //   thư mục con: domains/diemdanhsv.com/public_html/kiemtra/api/lib → domains/diemdanhsv.com/private/config.php
+    //   subdomain:   domains/kiemtra.diemdanhsv.com/public_html/api/lib → domains/diemdanhsv.com/private/config.php
+    //                (hoặc domains/diemdanhsv.com/public_html/kiemtra/… tuỳ cách hPanel tạo subdomain)
     $dir = __DIR__;
-    for ($i = 0; $i < 6; $i++) {
+    for ($i = 0; $i < 7; $i++) {
         $dir = dirname($dir);
-        $cand = $dir . '/private/config.php';
-        if (is_file($cand)) {
-            return $path = $cand;
+        foreach ([$dir . '/private/config.php', $dir . '/diemdanhsv.com/private/config.php'] as $cand) {
+            if (@is_file($cand)) {
+                return $path = $cand;
+            }
         }
     }
     throw new RuntimeException('Chưa tìm thấy private/config.php (dùng chung với diemdanhsv.com).');
