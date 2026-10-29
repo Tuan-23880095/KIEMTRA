@@ -1,6 +1,6 @@
 # KIEMTRA — Kiểm tra trực tuyến tại lớp
 
-**Địa chỉ chạy thật:** `https://diemdanhsv.com/kiemtra/` → `https://kiemtra.diemdanhsv.com/`
+**Địa chỉ chạy thật:** `https://diemdanhsv.com/kiemtra/`
 **Chủ nhiệm:** ThS. Đinh Quốc Tuấn — Khoa Địa chất, Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM
 
 Hệ thống thi trắc nghiệm **trực tiếp trên lớp** bằng điện thoại/laptop của sinh viên:
@@ -26,20 +26,25 @@ KIEMTRA **không có CSDL hay tài khoản riêng**:
 - điểm thang 10 được ghi vào `grade_columns`/`grades` (mặc định cột “Giữa kỳ”) — SV xem ở trang Xem điểm;
 - chỉ thêm 7 bảng tiền tố `kt_` (`db/schema.mysql.sql`), không sửa bảng nào của site chính.
 
-## Triển khai lên Hostinger (subdomain `kiemtra.diemdanhsv.com`)
+## Triển khai lên Hostinger
 
-hPanel kiểu **Deployments** gắn mỗi website với đúng một repo, nên KIEMTRA chạy trên subdomain riêng
-(giống `hopviec.diemdanhsv.com`); `diemdanhsv.com/kiemtra` chuyển hướng sang đó.
+Gói Premium cho tối đa **3 website** và đã dùng hết (diemdanhsv.com, hopviec, bdvh), nên KIEMTRA **không chạy
+như website riêng**. Thay vào đó, GitHub Action `.github/workflows/dong-bo-diemdanhsv.yml` chép KIEMTRA vào
+thư mục `kiemtra/` của repo **diemdanhsv** mỗi khi đẩy code; Hostinger đang auto-deploy diemdanhsv nên trang
+chạy tại **`https://diemdanhsv.com/kiemtra/`**.
 
 1. **Tạo bảng**: hPanel → Databases → phpMyAdmin → chọn CSDL của diemdanhsv → *Import* → `db/schema.mysql.sql`.
-2. **Tạo subdomain**: hPanel → Websites → diemdanhsv.com → Domains → **Subdomains** → tạo `kiemtra` (bật SSL).
-3. **Kết nối repo**: hPanel → Websites → mở website `kiemtra.diemdanhsv.com` → **Deployments** (hoặc Advanced → Git)
-   → *Connect with GitHub* → chọn repo **KIEMTRA**, nhánh `main` → Deploy → bật **Auto-deployment**.
-4. **Chuyển hướng** `diemdanhsv.com/kiemtra` → subdomain: thêm vào `.htaccess` của repo diemdanhsv (đặt ngay sau
-   `RewriteRule ^\.well-known/ - [L]`):
-   `RewriteRule ^kiemtra(/.*)?$ https://kiemtra.diemdanhsv.com$1 [R=302,L,NC]`
-5. **Kiểm tra**: `https://kiemtra.diemdanhsv.com/api/index.php?action=ping` → `{"status":"success",…}`;
+2. **Tạo token**: GitHub → Settings → Developer settings → Fine-grained tokens → *Generate new token*:
+   chỉ repo `diemdanhsv`, quyền **Contents: Read and write**.
+3. **Gắn token vào KIEMTRA**: repo KIEMTRA → Settings → Secrets and variables → Actions → *New repository secret*
+   `DIEMDANHSV_TOKEN` = token vừa tạo.
+4. **Chạy đồng bộ**: KIEMTRA → Actions → “Dong bo sang diemdanhsv/kiemtra” → *Run workflow* (các lần sau tự chạy).
+   Nếu nhánh `main` của diemdanhsv bật bảo vệ (bắt buộc PR), cho phép token này bỏ qua hoặc đổi workflow sang tạo PR.
+5. **Kiểm tra**: `https://diemdanhsv.com/kiemtra/api/index.php?action=ping` → `{"status":"success",…}`;
    mở `https://diemdanhsv.com/kiemtra/gv.html` → đăng nhập bằng tài khoản điểm danh.
+
+Nếu sau này có website trống (nâng gói hoặc bỏ một website), có thể triển khai thẳng lên subdomain
+`kiemtra.diemdanhsv.com` bằng Deployments của hPanel — mã chạy được cả hai cách.
 
 Mã tự tìm file bí mật dùng chung `domains/diemdanhsv.com/private/config.php` ở cả hai cách bố trí thư mục của
 subdomain trên Hostinger, nên **không cần** tạo config mới.
