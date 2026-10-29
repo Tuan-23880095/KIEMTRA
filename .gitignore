@@ -1,0 +1,10 @@
+# bí mật & dữ liệu — KHÔNG BAO GIỜ commit
+config.php
+private/
+*.sqlite
+*.sqlite-*
+.dev/
+uploads/
+*.xlsx
+error_log
+.DS_Store
